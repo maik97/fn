@@ -83,8 +83,7 @@ class NeuralConnection(nn.Module):
         return x, y, z, r
 
     def forward(self, other_connections, scale=1.0):
-        fixed_loss = th.sum(th.abs(self.p_bottom - self.points[0]))
-        fixed_loss = fixed_loss + th.sum(th.abs(self.p_top - self.points[-1]))
+        fixed_loss = self.puffer_fix(self.points)
 
         intersect_loss = th.tensor(0.0)
         for o_c in other_connections:
@@ -166,7 +165,7 @@ class ConnectionSim:
                 noise_losses.append(noise_loss)
 
             fixed_loss = th.sum(th.stack(fixed_losses)) * 1000
-            intersect_loss = th.sum(th.stack(intersect_losses))
+            intersect_loss = th.sum(th.stack(intersect_losses)) * 10
             dist_loss = th.sum(th.stack(dist_losses)) / 10000
             dir_loss = th.sum(th.stack(dir_losses)) / 1000
             noise_loss = th.sum(th.stack(noise_losses)) * 10
@@ -187,6 +186,9 @@ class ConnectionSim:
             if visualize:
                 self.render()
 
+        self.plot()
+        plt.show()
+
     def plot(self):
         fig = pylab.figure(figsize=[10, 10],  # Inches
                            dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
@@ -201,9 +203,9 @@ class ConnectionSim:
             l.smooth_interpolate()
 
 
-connect_sim = ConnectionSim(50, 0.05)
+connect_sim = ConnectionSim(30, 0.01)
 #connect_sim.plot()
-connect_sim.step(epochs=2_000, scale=0.9)
+connect_sim.step(epochs=200_000, scale=0.9)
 #connect_sim.plot()
 
 

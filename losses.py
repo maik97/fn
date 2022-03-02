@@ -62,6 +62,9 @@ class PufferZone:
         self.compare_0 = th.squeeze(th.tensor(vecs[self.ids_0]))
         self.compare_1 = th.squeeze(th.tensor(vecs[self.ids_1]))
 
+        self.ids_0 = len(self.ids_0)
+        self.ids_1 = len(self.ids_1)
+
     def __call__(self, vecs):
-        return (th.sum(th.abs(vecs[self.ids_0] - self.compare_0))
-                + th.sum(th.abs(vecs[self.ids_1] - self.compare_1)))
+        return (th.sum(th.square(th.abs(vecs[:self.ids_0] - self.compare_0)))
+                + th.sum(th.square(th.abs(vecs[-self.ids_1:] - self.compare_1))))
