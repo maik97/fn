@@ -37,7 +37,6 @@ class NeuralConnection(nn.Module):
                   c_1.y + (c_2.y - c_1.y) * 0.1 * c_1.r,
                   c_2.y - (c_2.y - c_1.y) * 0.1 * c_2.r,
                   c_2.y]
-        asdgasdf
 
         self.x = InterpolatingValues(init_y, init_x)
         self.z = InterpolatingValues(init_y, init_z)
