@@ -16,7 +16,7 @@ import pylab
 from sim_stuff import layer_planes, plot_circle_pack
 
 from functional import InterpolatingValues, AxisValues
-from losses import WeightedEuclideanDistance, WeightedDirection, noise_reduction_loss
+from losses import WeightedEuclideanDistance, WeightedDirection, noise_reduction_loss, PufferZone
 
 from render_sim import Visualizer
 
@@ -68,6 +68,12 @@ class NeuralConnection(nn.Module):
         self.weighted_dir = WeightedDirection(self.points)
         self.pdist = nn.PairwiseDistance(p=2)
         self.y_vals = th.tensor(y)
+        self.puffer_fix = PufferZone(
+            self.points,
+            - 0.5 * height + puffer,
+            0.5 * height - puffer,
+            self.y_vals
+        )
 
     def make_points(self, num):
         y = self.y(num)
@@ -195,7 +201,7 @@ class ConnectionSim:
             l.smooth_interpolate()
 
 
-connect_sim = ConnectionSim(50, 0.01)
+connect_sim = ConnectionSim(50, 0.05)
 #connect_sim.plot()
 connect_sim.step(epochs=2_000, scale=0.9)
 #connect_sim.plot()

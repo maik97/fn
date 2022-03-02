@@ -1,3 +1,5 @@
+import numpy as np
+
 from scipy.signal import savgol_filter
 
 import torch as th
@@ -46,3 +48,20 @@ class WeightedDirection:
         diff = reshaped_nVs - nVs
         diff = th.sum(th.abs(diff), dim=-1)
         return th.square(diff * self.W)
+
+
+class PufferZone:
+
+    def __init__(self, vecs, puffer_0, puffer_1, y_vals):
+        vecs = vecs.clone().detach().numpy()
+        y_vals = y_vals.clone().detach().numpy()
+
+        self.ids_0 = np.argwhere(y_vals < puffer_0)
+        self.ids_1 = np.argwhere(y_vals > puffer_1)
+
+        self.compare_0 = th.squeeze(th.tensor(vecs[self.ids_0]))
+        self.compare_1 = th.squeeze(th.tensor(vecs[self.ids_1]))
+
+    def __call__(self, vecs):
+        return (th.sum(th.abs(vecs[self.ids_0] - self.compare_0))
+                + th.sum(th.abs(vecs[self.ids_1] - self.compare_1)))
