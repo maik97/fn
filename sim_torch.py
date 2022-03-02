@@ -6,12 +6,19 @@ import torch as th
 from torch import nn
 from torch.optim import Adam
 
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use("Agg")
+import matplotlib.backends.backend_agg as agg
+
+import pylab
 
 from sim_stuff import layer_planes, plot_circle_pack
 
 from functional import InterpolatingValues, AxisValues
 from losses import WeightedEuclideanDistance, WeightedDirection, noise_reduction_loss
+
+from render_sim import Visualizer
 
 
 class NeuralConnection(nn.Module):
@@ -57,7 +64,7 @@ class NeuralConnection(nn.Module):
             th.tensor([x, z]).transpose(-2, -1)
         )
 
-        self.weighted_cdist = WeightedEuclideanDistance(self.points)
+        self.weighted_cdist = WeightedEuclideanDistance(self.num_points)
         self.weighted_dir = WeightedDirection(self.points)
         self.pdist = nn.PairwiseDistance(p=2)
         self.y_vals = th.tensor(y)
@@ -94,23 +101,28 @@ class NeuralConnection(nn.Module):
         ax.plot3D(p_t[0], p_t[1], self.y(len(points)))
 
     def smooth_interpolate(self):
-        p_t = np.transpose(self.points)
-        x, z = p_t[0], p_t[1]
-        for i in range(5):
-            x = savgol_filter(x, 11, 3)
-            z = savgol_filter(z, 11, 3)
-        self.points = np.transpose([x, z])
+        with th.no_grad():
+            p = self.points.clone().detach().numpy()
+            p_t = np.transpose(p)
+            x, z = p_t[0], p_t[1]
+            for i in range(1):
+                x = savgol_filter(x, 11, 3)
+                z = savgol_filter(z, 11, 3)
+            p = np.transpose([x, z])
+            p = th.tensor(p)
+            self.points = nn.Parameter(p)
 
 
 class ConnectionSim:
 
-    def __init__(self, num_points):
+    def __init__(self, num_points, lr):
         self.l_plane = layer_planes(weighted_radius=1.0, equal_radius=1.0)
         self.l_test = nn.ModuleList()
         for l in self.l_plane:
             self.l_test.append(NeuralConnection(l, num_points=num_points))
 
-        self.optimizer = Adam(self.l_test.parameters(), lr=0.001)
+        self.optimizer = Adam(self.l_test.parameters(), lr=lr)
+        self.visualizer = Visualizer()
 
     def plot_planes(self):
         pl_0 = []
@@ -121,7 +133,15 @@ class ConnectionSim:
         plot_circle_pack(pl_0)
         plot_circle_pack(pl_1)
 
-    def step(self, epochs=2_000, scale=0.9):
+    def render(self):
+        fig = self.plot()
+        self.visualizer.render_step(fig)
+        plt.close('all')
+
+    def step(self, epochs, scale, visualize=True):
+
+        if visualize:
+            self.render()
 
         for e in range(epochs):
 
@@ -143,7 +163,7 @@ class ConnectionSim:
             intersect_loss = th.sum(th.stack(intersect_losses))
             dist_loss = th.sum(th.stack(dist_losses)) / 10000
             dir_loss = th.sum(th.stack(dir_losses)) / 1000
-            noise_loss = th.sum(th.stack(noise_losses)) / 2
+            noise_loss = th.sum(th.stack(noise_losses)) * 10
 
             loss = fixed_loss + intersect_loss + dist_loss + dir_loss + noise_loss
 
@@ -158,23 +178,27 @@ class ConnectionSim:
                   '- dir:', np.round(dir_loss.detach().numpy(), 3),
                   '- noise:', np.round(noise_loss.detach().numpy(), 3),
                   )
+            if visualize:
+                self.render()
 
     def plot(self):
-        fig = plt.figure()
+        fig = pylab.figure(figsize=[10, 10],  # Inches
+                           dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
+                           )
         ax = fig.gca(projection='3d')
         for l in self.l_test:
             l.plot_to_fig(ax)
-        plt.show()
+        return fig
 
     def smooth(self):
         for l in self.l_test:
             l.smooth_interpolate()
 
 
-connect_sim = ConnectionSim(50)
+connect_sim = ConnectionSim(50, 0.01)
 #connect_sim.plot()
-connect_sim.step()
-connect_sim.plot()
+connect_sim.step(epochs=2_000, scale=0.9)
+#connect_sim.plot()
 
 
 
