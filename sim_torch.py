@@ -99,8 +99,9 @@ class NeuralConnection(nn.Module):
             min_dist = (self.radii + o_c.radii) * scale
             ops = th.transpose(o_c.points,-2, -1)
             ops = th.cat([ops, th.unsqueeze(self.y_vals, 0)]).transpose(-2, -1)
-            ops = ops.reshape(1, len(ops), 1, -1)
-            eucl_dist = self.pdist(ps, ops)
+            #ops = ops.reshape(1, len(ops), 1, -1)
+            #eucl_dist = self.pdist(ps, ops)
+            eucl_dist = th.cdist(ps, ops)
             intersect_loss = intersect_loss + th.sum(th.relu(min_dist - eucl_dist))
 
         dist_loss = th.sum(self.weighted_cdist(ps, ps))

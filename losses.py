@@ -30,8 +30,9 @@ class WeightedEuclideanDistance:
         self.pdist = nn.PairwiseDistance(p=2)
 
     def __call__(self, x1, x2):
-        x2 = x2.reshape(1, len(x2), 1, -1)
-        dist = self.pdist(x1, x2)
+        #x2 = x2.reshape(1, len(x2), 1, -1)
+        dist = th.cdist(x1, x2)
+        #dist = self.pdist(x1, x2)
         return th.square(dist * self.W)
 
 
