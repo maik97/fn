@@ -213,7 +213,7 @@ class ConnectionSim:
             l.smooth_interpolate()
 
 
-connect_sim = ConnectionSim(100, 0.1)
+connect_sim = ConnectionSim(100, 0.05)
 #connect_sim.plot()
 connect_sim.step(epochs=200_000, scale=0.7)
 #connect_sim.plot()

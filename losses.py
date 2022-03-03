@@ -27,7 +27,7 @@ class WeightedEuclideanDistance:
 
     def __init__(self, vec_len):
         self.W = arg_dist(vec_len)*2
-        self.pdist = nn.PairwiseDistance(p=2)
+        #self.pdist = nn.PairwiseDistance(p=2)
 
     def __call__(self, x1, x2):
         #x2 = x2.reshape(1, len(x2), 1, -1)
@@ -73,4 +73,3 @@ class PufferZone:
         loss_0 = th.square(th.abs(vecs[:self.ids_0] - self.compare_0)).sum(-1)
         loss_1 = th.square(th.abs(vecs[-self.ids_1:] - self.compare_1)).sum(-1)
         return th.sum(self.weight_0*loss_0) + th.sum(self.weight_1*loss_1)
-
