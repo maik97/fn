@@ -164,11 +164,11 @@ class ConnectionSim:
                 dir_losses.append(dir_loss)
                 noise_losses.append(noise_loss)
 
-            fixed_loss = th.sum(th.stack(fixed_losses)) * 1000
+            fixed_loss = th.sum(th.stack(fixed_losses))
             intersect_loss = th.sum(th.stack(intersect_losses)) * 10
-            dist_loss = th.sum(th.stack(dist_losses)) / 10000
-            dir_loss = th.sum(th.stack(dir_losses)) / 1000
-            noise_loss = th.sum(th.stack(noise_losses)) * 10
+            dist_loss = th.sum(th.stack(dist_losses)) / 100000
+            dir_loss = th.sum(th.stack(dir_losses)) / 10000
+            noise_loss = th.sum(th.stack(noise_losses)) * 20
 
             loss = fixed_loss + intersect_loss + dist_loss + dir_loss + noise_loss
 
@@ -203,7 +203,7 @@ class ConnectionSim:
             l.smooth_interpolate()
 
 
-connect_sim = ConnectionSim(30, 0.01)
+connect_sim = ConnectionSim(100, 0.01)
 #connect_sim.plot()
 connect_sim.step(epochs=200_000, scale=0.9)
 #connect_sim.plot()
