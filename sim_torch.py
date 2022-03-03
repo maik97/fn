@@ -85,14 +85,23 @@ class NeuralConnection(nn.Module):
     def forward(self, other_connections, scale=1.0):
         fixed_loss = self.puffer_fix(self.points)
 
-        intersect_loss = th.tensor(0.0)
+        '''intersect_loss = th.tensor(0.0)
         for o_c in other_connections:
             min_dist = (self.radii + o_c.radii) * scale
             eucl_dist = self.pdist(self.points, o_c.points)
-            intersect_loss = intersect_loss + th.sum(th.relu(min_dist - eucl_dist))
+            intersect_loss = intersect_loss + th.sum(th.relu(min_dist - eucl_dist))'''
 
         ps = th.transpose(self.points,-2, -1)
         ps = th.cat([ps, th.unsqueeze(self.y_vals, 0)]).transpose(-2, -1)
+
+        intersect_loss = th.tensor(0.0)
+        for o_c in other_connections:
+            min_dist = (self.radii + o_c.radii) * scale
+            ops = th.transpose(o_c.points,-2, -1)
+            ops = th.cat([ops, th.unsqueeze(self.y_vals, 0)]).transpose(-2, -1)
+            ops = ops.reshape(1, len(ops), 1, -1)
+            eucl_dist = self.pdist(ps, ops)
+            intersect_loss = intersect_loss + th.sum(th.relu(min_dist - eucl_dist))
 
         dist_loss = th.sum(self.weighted_cdist(ps, ps))
         dir_loss = th.sum(self.weighted_dir(ps))
@@ -203,9 +212,9 @@ class ConnectionSim:
             l.smooth_interpolate()
 
 
-connect_sim = ConnectionSim(100, 0.01)
+connect_sim = ConnectionSim(100, 0.1)
 #connect_sim.plot()
-connect_sim.step(epochs=200_000, scale=0.9)
+connect_sim.step(epochs=200_000, scale=0.7)
 #connect_sim.plot()
 
 
