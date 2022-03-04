@@ -19,15 +19,6 @@ from losses import WeightedEuclideanDistance, WeightedDirection, noise_reduction
 from render_sim import Visualizer
 
 
-def curve(radius=1.0, factor_pi=1.0, y_0=0.0, y_1=0.0, x=0.0, z=0.0, num_p=100):
-    theta = np.linspace(0, factor_pi * np.pi, num_p)
-    x = x + radius * np.cos(theta)
-    z = z + radius * np.sin(theta)
-    y = np.linspace(y_0, y_1, num_p)
-    print(y)
-    return x, y, z
-
-
 class NeuronTurboModel(nn.Module):
 
     def __init__(self, num_points, radius: float = 0.5, height: float = 5.0, puffer=1.0):
