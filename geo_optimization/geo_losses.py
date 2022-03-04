@@ -14,33 +14,29 @@ def noise_reduction_loss(vecs, window_length=11, polyorder=3):
     return th.abs(vecs - smooth)
 
 
-def arg_dist(vec_len):
+def arg_dist(num_p):
     a_d = []
-    for i in range(vec_len):
-        for j in range(vec_len):
-            i_j = 1 - (abs(i - j) / vec_len)
+    for i in range(num_p):
+        for j in range(num_p):
+            i_j = 1 - (abs(i - j) / num_p)
             a_d.append(i_j)
-    return th.tensor(a_d).reshape(vec_len, vec_len)
+    return th.tensor(a_d).reshape(num_p, num_p)
 
 
 class WeightedEuclideanDistance:
 
-    def __init__(self, vec_len):
-        self.W = arg_dist(vec_len)*2
-        #self.pdist = nn.PairwiseDistance(p=2)
+    def __init__(self, num_p, w_scale=1.0, w_bias=0.0):
+        self.W = arg_dist(num_p) * w_scale + w_bias
 
     def __call__(self, x1, x2):
-        #x2 = x2.reshape(1, len(x2), 1, -1)
         dist = th.cdist(x1, x2)
-        #dist = self.pdist(x1, x2)
         return th.square(dist * self.W)
 
 
 class WeightedDirection:
 
-    def __init__(self, vecs):
-
-        self.W = arg_dist(len(vecs) - 1)*2
+    def __init__(self, num_p, w_scale=1.0, w_bias=0.0):
+        self.W = arg_dist(num_p - 1) * w_scale + w_bias
 
     def __call__(self, vec_path):
         directions = vec_path[:-1] - vec_path[1:]

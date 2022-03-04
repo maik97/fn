@@ -3,6 +3,8 @@ from scipy import interpolate
 
 
 def resample(vals, num_p, kind='linear'):
+    if isinstance(vals, (int, float)):
+        vals = [vals]*num_p
     l_space = np.linspace(0, 1, len(vals))
     vals_interp = interpolate.interp1d(l_space, vals, kind=kind)
     l_space = np.linspace(0, 1, num_p)

@@ -60,6 +60,7 @@ class PufferZone:
         self.ids_0 = np.argwhere(y_vals < puffer_0)
         self.ids_1 = np.argwhere(y_vals > puffer_1)
 
+
         self.compare_0 = th.squeeze(th.tensor(vecs[self.ids_0]))
         self.compare_1 = th.squeeze(th.tensor(vecs[self.ids_1]))
 
@@ -73,3 +74,36 @@ class PufferZone:
         loss_0 = th.square(th.abs(vecs[:self.ids_0] - self.compare_0)).sum(-1)
         loss_1 = th.square(th.abs(vecs[-self.ids_1:] - self.compare_1)).sum(-1)
         return th.sum(self.weight_0*loss_0) + th.sum(self.weight_1*loss_1)
+
+
+class MaskedSelfRepel:
+
+    def __init__(self, dist_matrix, min_dist_matrix):
+
+        self.mask_ranges = self.make_mask_ranges(dist_matrix, min_dist_matrix)
+
+
+    def make_mask_ranges(self, dist_matrix, min_dist_matrix):
+        dist_matrix = dist_matrix.clone()
+
+        mask_ranges = []
+        for i in range(len(dist_matrix)):
+            m_range_0 = 0
+            m_range_1 = len(dist_matrix)
+
+            for j in range(i, m_range_0):
+                if dist_matrix[i , j] > min_dist_matrix[i , j]:
+                    m_range_0 = j
+                    break
+
+            for j in range(i, m_range_1):
+                if dist_matrix[i , j] > min_dist_matrix[i , j]:
+                    m_range_1 = j
+                    break
+
+            mask_ranges.append([m_range_0, m_range_1])
+        return np.array(mask_ranges)
+
+
+
+

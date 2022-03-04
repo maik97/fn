@@ -9,6 +9,7 @@ from torch.optim import Adam
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use("Agg")
+from matplotlib import cm
 import matplotlib.backends.backend_agg as agg
 
 import pylab
@@ -86,9 +87,15 @@ class NeuronTurboModel(nn.Module):
     def plot_to_fig(self, ax):
         #points = self.points_3d.clone().detach().numpy()
         #p_t = np.transpose(points)
+
         ax.plot3D(self.x.clone().detach().numpy(),
                   self.y.clone().detach().numpy(),
+                  self.z.clone().detach().numpy(),
+                  c='lightgrey')
+        ax.scatter(self.x.clone().detach().numpy(),
+                  self.y.clone().detach().numpy(),
                   self.z.clone().detach().numpy())
+
 
 
 class NeuronTurboSim:
