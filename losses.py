@@ -60,6 +60,11 @@ class PufferZone:
         self.ids_0 = np.argwhere(y_vals < puffer_0)
         self.ids_1 = np.argwhere(y_vals > puffer_1)
 
+        print(puffer_0)
+        print(puffer_1)
+        print(y_vals)
+        print(self.ids_0)
+        print(self.ids_1)
 
         self.compare_0 = th.squeeze(th.tensor(vecs[self.ids_0]))
         self.compare_1 = th.squeeze(th.tensor(vecs[self.ids_1]))

@@ -8,12 +8,17 @@ class Geometry(nn.Module):
         super(Geometry, self).__init__()
         pass
 
-    def points(self):
+    def points_detached(self):
+        return (self.x1.clone().detach(),
+                self.x2.clone().detach(),
+                self.x3.clone().detach())
+
+    def points_numpy(self):
         return (self.x1.clone().detach().numpy(),
                 self.x2.clone().detach().numpy(),
                 self.x3.clone().detach().numpy())
 
     def plot_to_ax(self, ax):
-        x1, x2, x3 = self.points()
+        x1, x2, x3 = self.points_numpy()
         ax.plot3D(x1, x2, x3, c='lightgrey')
         ax.scatter(x1, x2, x3)

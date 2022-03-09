@@ -36,10 +36,13 @@ def spiral(radius=1.0, factor_pi=1.0, height=1.0, num_p=100, x1=0.0, x2=0.0, x3=
     return x1, x2, x3
 
 
-def pretzel_knot_init(length: float = 4.0, puffer=1.0, num_p=100):
+def pretzel_knot_init(radius, length: float = 4.0, puffer=1.0, num_p=100):
+    d = 2 * radius
     lp = length / 2 - puffer
     lf = length / 2
-    x1 = np.array([-lf, -lp, 0, lp, lp, 0, -lp, -lp, 0, lp, lf])
-    x2 = np.array([0, 0, 1, 0, -1, 0, 1, 0, -1, 0, 0])
-    x3 = np.array([0, 0, 1, 1, -1, -1, -1, 1, 1, 0, 0])
+    #x1 = np.array([-lf, -lp, 0, lp, lp, 0, -lp, -lp, 0, lp, lf])
+    x1 = np.array([-lf, -lp, 0, lp, lp+radius, 0, -lp-radius, -lp, 0, lp, lf])
+    x2 = np.array([0, 0, d, d, -d, -d, -d, d, d, 0, 0])
+    x3 = np.array([0, 0, d, 0, -d, 0, d, 0, -d, 0, 0])
+    print(x1, x2, x3)
     return resample(x1, num_p), resample(x2, num_p), resample(x3, num_p)

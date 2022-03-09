@@ -58,7 +58,7 @@ class NeuronTurboModel(nn.Module):
         dist_matrix = dist_matrix.clone()
         for i in range(len(dist_matrix)):
 
-            for j in range(i, 0):
+            for j in reversed(range(0, i)):
                 if dist_matrix[i , j] <= min_dist:
                     dist_matrix[i, j] = min_dist + 1
                 else:
@@ -78,9 +78,17 @@ class NeuronTurboModel(nn.Module):
         dist = th.cdist(p3d, p3d)
         dist_mask = self.mask_distances(dist, self.radius * 2 * scale)
         intersect = th.relu(self.radius * 2 * scale - dist_mask)
+
         p2d = th.cat([self.y, self.z]).reshape(2,-1).transpose(-2, -1)
         noise = noise_reduction_loss(p2d)
-        direct = self.dir_loss(p3d)
+        #direct = self.dir_loss(p3d)
+
+        print(
+            'fix',th.sum(fixed_loss),
+            'dist',th.sum(self.dist_loss(p3d, p3d)) / 10_000,
+            'intersect',th.sum(intersect),
+            'noise', th.sum(noise) * 10
+        )
 
         return th.sum(fixed_loss) + th.sum(self.dist_loss(p3d, p3d)) / 10_000 + th.sum(intersect) + th.sum(noise)*10# + th.sum(noise)
 
