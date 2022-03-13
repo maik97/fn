@@ -20,5 +20,12 @@ class Geometry(nn.Module):
 
     def plot_to_ax(self, ax):
         x1, x2, x3 = self.points_numpy()
-        ax.plot3D(x1, x2, x3, c='lightgrey')
-        ax.scatter(x1, x2, x3)
+
+        if x1.ndim == 1:
+            ax.plot3D(x1, x2, x3, c='lightgrey')
+            ax.scatter(x1, x2, x3)
+
+        else:
+            for e1, e2, e3 in zip(x1, x2, x3):
+                ax.plot3D(e1, e2, e3, c='lightgrey')
+                ax.scatter(e1, e2, e3)

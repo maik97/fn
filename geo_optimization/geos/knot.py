@@ -15,12 +15,14 @@ from geo_optimization.geos import Geometry
 from geo_optimization.geo_makers import resample, pretzel_knot_init
 from geo_optimization.geo_losses import PufferZone, WeightedEuclideanDistance, WeightedDirection, masked_intersect, noise_reduction_loss
 from geo_optimization.geo_render import GeoVisualizer
+from geo_optimization.value_scheduling import make_factor_scheduler
 
 
 class PretzelKnot(Geometry):
 
     def __init__(self, num_p, radius: (float, list) = 0.5, length: float = 4.0, puffer=1.0):
         super(PretzelKnot, self).__init__()
+        self.visualizer = GeoVisualizer()
 
         self.radius, self.length, self.puffer, self.num_p = radius, length, puffer, num_p
 
@@ -38,8 +40,6 @@ class PretzelKnot(Geometry):
 
         self.weighted_distances = WeightedEuclideanDistance(num_p)
         self.weighted_direction = WeightedDirection(num_p)
-
-        self.visualizer = GeoVisualizer()
 
     def resample(self, num_p=None):
         if num_p is not None:
@@ -97,9 +97,15 @@ class PretzelKnot(Geometry):
             fixed_scale=1.0,
             intersect_scale=1.0,
             dist_scale=1.0/10_000,
+            direct_scale=1.0/10_000,
             noise_scale=10.0,
             scheduler=None,
     ):
+        fixed_scale = make_factor_scheduler(fixed_scale)
+        intersect_scale = make_factor_scheduler(intersect_scale)
+        dist_scale = make_factor_scheduler(dist_scale)
+        direct_scale = make_factor_scheduler(direct_scale)
+        noise_scale = make_factor_scheduler(noise_scale)
 
         if optimizer is None:
             optimizer = Adam(self.parameters(), lr=0.01)
@@ -113,11 +119,11 @@ class PretzelKnot(Geometry):
 
             fixed_loss, intersect_loss, dist_loss, direct_loss, noise_loss, volume_loss = self(scale)
 
-            fixed_loss = fixed_loss * fixed_loss_scale
-            intersect_loss = intersect_loss * intersect_loss_scale
-            dist_loss = dist_loss * dist_loss_scale
-            direct_loss = direct_loss * dist_loss_scale
-            noise_loss = noise_loss * noise_loss_scale
+            fixed_loss = fixed_scale(fixed_loss)
+            intersect_loss = intersect_scale(intersect_loss)
+            dist_loss = dist_scale(dist_loss)
+            direct_loss = direct_scale(direct_loss)
+            noise_loss = noise_scale(noise_loss)
 
             loss = (fixed_loss + intersect_loss + dist_loss + noise_loss + direct_loss + volume_loss)
 
@@ -144,7 +150,7 @@ class PretzelKnot(Geometry):
             if e % 200 == 0:
                 print(e)
                 self.resample()
-                intersect_loss_scale = intersect_loss_scale*2
+                #intersect_loss_scale = intersect_loss_scale*2
 
             print(*run_log)
 
@@ -169,7 +175,13 @@ def main():
     pretzel_knot = PretzelKnot(100, radius=radius)
     optimizer = Adam(pretzel_knot.parameters(), lr=lr)
     scheduler = StepLR(optimizer=optimizer, step_size=200, gamma=0.5)
-    pretzel_knot.optimize(optimizer=optimizer, scale=scale, epochs=1200, scheduler=scheduler)
+    pretzel_knot.optimize(
+        optimizer=optimizer,
+        scale=scale,
+        epochs=1200,
+        scheduler=scheduler,
+        intersect_scale=[1.0, 200, 2.0],
+    )
 
     points_3d = pretzel_knot.get_points_3d()
     dist_matrix = th.cdist(points_3d, points_3d)

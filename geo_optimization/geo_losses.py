@@ -5,6 +5,12 @@ from scipy.signal import savgol_filter
 import torch as th
 from torch import nn
 
+def noise_reduction_loss_1d(points, window_length=11, polyorder=3):
+    smooth = points.clone().detach().numpy()
+    smooth = savgol_filter(smooth, window_length=window_length, polyorder=polyorder)
+    smooth = th.tensor(smooth)
+    return th.abs(points - smooth)
+
 
 def noise_reduction_loss(points_2d, window_length=11, polyorder=3):
     smooth = points_2d.clone().detach().transpose(-2, -1).numpy()
@@ -62,26 +68,52 @@ def group_connected_indices(indices_arr):
 
 class PufferZone:
 
-    def __init__(self, points_2d, length, puffer, height_points):
+    def __init__(self, points_2d, length, puffer, height_points, only_connected=True):
         lp = length / 2 - puffer
         points_2d = points_2d.clone().detach().numpy()
         height_points = height_points.clone().detach().numpy()
 
-        self.ids_0 = group_connected_indices(np.argwhere(height_points < -lp))[0]
-        self.ids_1 = group_connected_indices(np.argwhere(height_points > lp))[-1]
+        if only_connected:
+            self.ids_0 = group_connected_indices(np.argwhere(height_points < -lp))[0]
+            self.ids_1 = group_connected_indices(np.argwhere(height_points > lp))[-1]
+        else:
+            self.ids_0 = np.concatenate(group_connected_indices(np.argwhere(height_points < -lp)))
+            self.ids_1 = np.concatenate(group_connected_indices(np.argwhere(height_points > lp)))
+            #self.ids_0 = np.argwhere(height_points < -lp)
+            #self.ids_1 = np.argwhere(height_points > lp)
 
-        self.compare_0 = th.squeeze(th.tensor(points_2d[self.ids_0]))
-        self.compare_1 = th.squeeze(th.tensor(points_2d[self.ids_1]))
+        self.compare_0 = th.tensor(points_2d[self.ids_0]).reshape(-1, 2)
+        self.compare_1 = th.tensor(points_2d[self.ids_1]).reshape(-1, 2)
 
-        self.ids_0 = len(self.ids_0)
-        self.ids_1 = len(self.ids_1)
 
-        self.weight_0 = th.tensor(np.linspace(1000, 1, self.ids_0))
-        self.weight_1 = th.tensor(np.linspace(1, 1000, self.ids_1))
+        #self.ids_0 = len(self.ids_0)
+        #self.ids_1 = len(self.ids_1)
+
+        if only_connected:
+            self.weight_0 = th.tensor(np.linspace(1000, 1, len(self.ids_0)))
+            self.weight_1 = th.tensor(np.linspace(1, 1000, len(self.ids_1)))
+        else:
+            #self.weight_0 = th.tensor(np.linspace(100, 100, len(self.ids_0)))
+            #self.weight_1 = th.tensor(np.linspace(100, 100, len(self.ids_1)))
+            g_0 = group_connected_indices(np.argwhere(height_points < -lp))
+            g_1 = group_connected_indices(np.argwhere(height_points > lp))
+
+            w_0 = np.array([])
+            for elem in g_0:
+                w_0 = np.append(w_0, np.linspace(1000, 1, len(elem)))
+
+            w_1 = np.array([])
+            for elem in g_1:
+                w_1 = np.append(w_1, np.linspace(1, 1000, len(elem)))
+
+            self.weight_0 = th.tensor(w_0)
+            self.weight_1 = th.tensor(w_1)
 
     def __call__(self, points_2d):
-        loss_0 = th.square(th.abs(points_2d[:self.ids_0] - self.compare_0)).sum(-1)
-        loss_1 = th.square(th.abs(points_2d[-self.ids_1:] - self.compare_1)).sum(-1)
+        #loss_0 = th.square(th.abs(points_2d[:self.ids_0] - self.compare_0)).sum(-1)
+        loss_0 = th.square(th.abs(points_2d[self.ids_0].reshape(-1, 2) - self.compare_0)).sum(-1)
+        #loss_1 = th.square(th.abs(points_2d[-self.ids_1:] - self.compare_1)).sum(-1)
+        loss_1 = th.square(th.abs(points_2d[self.ids_1].reshape(-1, 2) - self.compare_1)).sum(-1)
         return th.sum(self.weight_0*loss_0) + th.sum(self.weight_1*loss_1)
 
     def force_constraints(self, points_2d):

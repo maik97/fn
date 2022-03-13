@@ -46,3 +46,32 @@ def pretzel_knot_init(radius, length: float = 4.0, puffer=1.0, num_p=100):
     x3 = np.array([0, 0, d, 0, -d, 0, d, 0, -d, 0, 0])
     print(x1, x2, x3)
     return resample(x1, num_p), resample(x2, num_p), resample(x3, num_p)
+
+
+def neuron_connection_init(circles: list, height: float = 5.0, puffer=1.0, num_p: int = 10):
+    c_1, c_2 = circles
+
+    x1 = [c_1.x,
+          c_1.x + (c_2.x - c_1.x) * 0.1 * c_1.r,
+          c_2.x - (c_2.x - c_1.x) * 0.1 * c_2.r,
+          c_2.x]
+
+    x2 = [c_1.y,
+          c_1.y + (c_2.y - c_1.y) * 0.1 * c_1.r,
+          c_2.y - (c_2.y - c_1.y) * 0.1 * c_2.r,
+          c_2.y]
+
+    x3 = [- 0.5 * height,
+          - 0.5 * height + puffer,
+          0.5 * height - puffer,
+          0.5 * height]
+
+    r_linear = interpolate.interp1d(
+        np.array([-height, -(height / 2), (height / 2), height]),
+        np.array([c_1.r, c_1.r, c_2.r, c_2.r]),
+        kind='linear'
+    )
+    r_vals = np.linspace(-height, height, num_p)
+
+    return resample(x1, num_p), resample(x2, num_p), resample(x3, num_p), r_linear(r_vals)
+
