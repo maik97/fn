@@ -48,6 +48,7 @@ class WeightedDirection:
         diff = th.sum(th.abs(diff), dim=-1)
         return th.square(diff * self.W)
 
+
 def group_connected_indices(indices_arr):
     grouped = []
     cur_i = 0
@@ -56,8 +57,8 @@ def group_connected_indices(indices_arr):
             grouped.append(indices_arr[cur_i:i])
             cur_i = i + 1
     grouped.append(indices_arr[cur_i:])
-    print(grouped)
     return grouped
+
 
 class PufferZone:
 

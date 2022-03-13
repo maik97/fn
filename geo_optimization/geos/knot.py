@@ -94,10 +94,10 @@ class PretzelKnot(Geometry):
             epochs=1_000,
             scale=1.0,
             visualize=True,
-            fixed_loss_scale=1.0,
-            intersect_loss_scale=1.0,
-            dist_loss_scale=1.0/10_000,
-            noise_loss_scale=10.0,
+            fixed_scale=1.0,
+            intersect_scale=1.0,
+            dist_scale=1.0/10_000,
+            noise_scale=10.0,
             scheduler=None,
     ):
 
