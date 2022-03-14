@@ -86,7 +86,7 @@ class LayerConnections(Geometry):
             fixed_scale=1.0,
             intersect_scale=0.0,
             dist_scale=1.0/100,
-            noise_scale=1.0,
+            noise_scale=10.0,
             scheduler=None,
     ):
         fixed_scale = make_factor_scheduler(fixed_scale)
@@ -160,13 +160,13 @@ def main():
 
 
     optimizer = Adam(connections.parameters(), lr=lr)
-    scheduler = StepLR(optimizer=optimizer, step_size=200, gamma=0.5)
+    scheduler = StepLR(optimizer=optimizer, step_size=100, gamma=0.9)
     connections.optimize(
         optimizer=optimizer,
         scale=scale,
         epochs=1200,
         scheduler=scheduler,
-        intersect_scale=[0.1, 200, 2.0],
+        intersect_scale=[0.1, 100, 1.5],
     )
 
     points_3d = connections.get_points_3d()

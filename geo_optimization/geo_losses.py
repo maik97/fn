@@ -100,11 +100,11 @@ class PufferZone:
 
             w_0 = np.array([])
             for elem in g_0:
-                w_0 = np.append(w_0, np.linspace(1000, 1, len(elem)))
+                w_0 = np.append(w_0, np.linspace(1000, 0.05, len(elem)))
 
             w_1 = np.array([])
             for elem in g_1:
-                w_1 = np.append(w_1, np.linspace(1, 1000, len(elem)))
+                w_1 = np.append(w_1, np.linspace(0.05, 1000, len(elem)))
 
             self.weight_0 = th.tensor(w_0)
             self.weight_1 = th.tensor(w_1)
