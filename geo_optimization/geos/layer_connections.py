@@ -164,9 +164,9 @@ def main():
     connections.optimize(
         optimizer=optimizer,
         scale=scale,
-        epochs=1200,
+        epochs=120_000,
         scheduler=scheduler,
-        intersect_scale=[0.1, 100, 1.5],
+        intersect_scale=[0.1, 100, 1.25],
     )
 
     points_3d = connections.get_points_3d()
